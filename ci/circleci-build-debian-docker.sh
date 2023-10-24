@@ -48,18 +48,18 @@ function install_wx32() {
   head="deb/debian/pool/bullseye/main"
   vers="3.2.1+dfsg-1~bpo11+1"
   pushd /usr/local/pkg
-  wget  $repo/$head/w/wx/wx3.2-i18n_${vers}/wx3.2-i18n_${vers}_all.deb
-  wget  $repo/$head/w/wx/wx3.2-headers_${vers}/wx3.2-headers_${vers}_all.deb
-  wget  $repo/$head/w/wx/wx-common_3.2.1+dfsg-1/wx-common_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk-webview3.2-dev_3.2.1+dfsg-1/libwxgtk-webview3.2-dev_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk-webview3.2-0_3.2.1+dfsg-1/libwxgtk-webview3.2-0_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk-media3.2-dev_3.2.1+dfsg-1/libwxgtk-media3.2-dev_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk3.2-dev_3.2.1+dfsg-1/libwxgtk3.2-dev_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk3.2-0_3.2.1+dfsg-1/libwxgtk3.2-0_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxbase3.2-0_3.2.1+dfsg-1/libwxbase3.2-0_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxgtk-media3.2-dev_3.2.1+dfsg-1/libwxgtk-media3.2-dev_3.2.1+dfsg-1_arm64.deb
-  wget  $repo/$head/l/li/libwxsvg-dev_2:1.5.23+dfsg-1~bpo11+1/libwxsvg-dev_1.5.23+dfsg-1~bpo11+1_arm64.deb
-  wget  $repo/$head/l/li/libwxsvg3_2:1.5.23+dfsg-1~bpo11+1/libwxsvg3_1.5.23+dfsg-1~bpo11+1_arm64.deb
+  wget -q $repo/$head/w/wx/wx-common_${vers}/wx-common_${vers}_amd64.deb
+  wget -q $repo/$head/w/wx/wx3.2-i18n_${vers}/wx3.2-i18n_${vers}_all.deb
+  wget -q $repo/$head/w/wx/wx3.2-headers_${vers}/wx3.2-headers_${vers}_all.deb
+  wget -q $repo/$head/l/li/libwxgtk-webview3.2-dev_${vers}/libwxgtk-webview3.2-dev_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxgtk-webview3.2-0_${vers}/libwxgtk-webview3.2-0_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxgtk-media3.2-dev_${vers}/libwxgtk-media3.2-dev_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxgtk3.2-dev_${vers}/libwxgtk3.2-dev_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxgtk3.2-0_${vers}/libwxgtk3.2-0_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxbase3.2-0_${vers}/libwxbase3.2-0_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxgtk-media3.2-0_${vers}/libwxgtk-media3.2-0_${vers}_amd64.deb
+  wget -q $repo/$head/l/li/libwxsvg-dev_2:1.5.23+dfsg-1~bpo11+1/libwxsvg-dev_1.5.23+dfsg-1~bpo11+1_amd64.deb
+  wget -q $repo/$head/l/li/libwxsvg3_2:1.5.23+dfsg-1~bpo11+1/libwxsvg3_1.5.23+dfsg-1~bpo11+1_amd64.deb
   dpkg -i --force-depends $(ls /usr/local/pkg/*deb)
   sed -i '/^user_mask_fits/s|{.*}|{ /bin/true; }|' \
       /usr/lib/*-linux-gnu/wx/config/gtk3-unicode-3.2
@@ -99,8 +99,11 @@ cd /ci-source
 rm -rf build-debian; mkdir build-debian; cd build-debian
 git config --global --add safe.directory /ci-source
 cmake -DCMAKE_BUILD_TYPE=Release\
+   "@OCPN_WX_ABI_OPT@" \
    -DOCPN_TARGET_TUPLE="@TARGET_TUPLE@" \
     ..
+
+#  -DOCPN_WX_ABI=wx32 \
 
 make -j $(nproc) VERBOSE=1 tarball
 ldd  app/*/lib/opencpn/*.so
@@ -111,7 +114,7 @@ if [ -n "$BUILD_WX32" ]; then OCPN_WX_ABI_OPT="-DOCPN_WX_ABI=wx32"; fi
 
 sed -i "s/@TARGET_TUPLE@/$TARGET_TUPLE/" $ci_source/build.sh
 sed -i "s/@BUILD_WX32@/$BUILD_WX32/" $ci_source/build.sh
-#sed -i "s/@OCPN_WX_ABI_OPT@/$OCPN_WX_ABI_OPT/" $ci_source/build.sh
+sed -i "s/@OCPN_WX_ABI_OPT@/$OCPN_WX_ABI_OPT/" $ci_source/build.sh
 
 
 # Run script in docker image
@@ -123,7 +126,8 @@ docker run \
     -e "CIRCLE_BUILD_NUM=$CIRCLE_BUILD_NUM" \
     -e "TRAVIS_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER" \
     -v "$ci_source:/ci-source:rw" \
-    debian:$OCPN_TARGET /bin/bash -xe /ci-source/build.sh
+    --platform linux/amd64 \
+    ubuntu:22.04 /bin/bash -xe /ci-source/build.sh
 rm -f $ci_source/build.sh
 
 
