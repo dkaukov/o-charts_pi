@@ -1016,7 +1016,7 @@ int Osenc::ingestHeader(const wxString &senc_file_name)
  */
     Osenc_instream fpx;
 
-    if( !fpx.Open(m_read_esencHdr_cmd, senc_file_name, m_key) ){
+    if( !fpx.Open(m_read_esencHdr_cmd, senc_file_name, "") ){
         if(g_debugLevel) wxLogMessage(_T("ingestHeader Open failed first"));
         wxMilliSleep(100);
         if( !fpx.Open(m_read_esencHdr_cmd, senc_file_name, m_key) ){
@@ -1266,7 +1266,7 @@ int Osenc::ingest200(const wxString &senc_file_name,
 
     Osenc_instream fpx;
 
-    if( !fpx.Open(m_read_esenc_cmd, senc_file_name, m_key) ){
+    if( !fpx.Open(m_read_esenc_cmd, senc_file_name,"") ){
         if(g_debugLevel) wxLogMessage(_T("ingest200 Open failed first"));
         wxMilliSleep(100);
         if( !fpx.Open(m_read_esenc_cmd, senc_file_name, m_key) ){
